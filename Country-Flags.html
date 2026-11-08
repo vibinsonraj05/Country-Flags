@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Flags Encyclopedia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 42px 24px 60px;
+            font-family: 'DM Sans', sans-serif;
+            color: #f7f8fc;
+            text-align: center;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(83, 111, 255, .22), transparent 30%),
+                radial-gradient(circle at 90% 25%, rgba(0, 211, 190, .15), transparent 28%),
+                linear-gradient(135deg, #0b1020 0%, #111a31 55%, #101827 100%);
+        }
+        h1 {
+            margin: 0 0 10px;
+            font: 800 clamp(2rem, 4vw, 3rem)/1.15 'Manrope', sans-serif;
+            letter-spacing: -1.5px;
+        }
+        .subtitle { margin: 0 auto 25px; color: #aab5cc; font-size: 1rem; }
+        .search-wrap { max-width: 480px; margin: 0 auto 32px; position: relative; }
+        .search-bar {
+            width: 100%; padding: 15px 20px 15px 48px;
+            color: #f7f8fc; background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.16); border-radius: 16px;
+            font: inherit; font-size: 15px; outline: none;
+            box-shadow: 0 12px 35px rgba(0,0,0,.15);
+            transition: border-color .2s, background .2s, box-shadow .2s;
+        }
+        .search-bar::placeholder { color: #8995ad; }
+        .search-bar:focus { border-color: #78a4ff; background: rgba(255,255,255,.11); box-shadow: 0 0 0 4px rgba(93,139,255,.13); }
+        .search-icon { position: absolute; left: 17px; top: 50%; transform: translateY(-50%); color: #9eabc4; font-size: 18px; pointer-events: none; }
+        .flag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 18px; max-width: 1400px; margin: auto;
+        }
+        .flag-item {
+            min-width: 0; padding: 17px 12px 14px; cursor: pointer;
+            border: 1px solid rgba(255,255,255,.11); border-radius: 18px;
+            background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.045));
+            box-shadow: 0 10px 28px rgba(0,0,0,.16);
+            transition: transform .25s ease, border-color .25s ease, background .25s ease, box-shadow .25s ease;
+        }
+        .flag-item:hover {
+            transform: translateY(-6px);
+            border-color: rgba(133,169,255,.55);
+            background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.07));
+            box-shadow: 0 18px 36px rgba(0,0,0,.28);
+        }
+        .flag-item img {
+            display: block; width: 100%; max-width: 118px; height: 76px;
+            object-fit: cover; margin: 0 auto 12px; border-radius: 9px;
+            box-shadow: 0 6px 16px rgba(0,0,0,.28);
+            transition: transform .25s ease;
+        }
+        .flag-item:hover img { transform: scale(1.045); }
+        .flag-item p { margin: 0; color: #e9eefb; font-size: .94rem; font-weight: 600; }
+        .empty-state { grid-column: 1/-1; padding: 35px; color: #aab5cc; }
+        /* Premium country details popup */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            align-items: center; justify-content: center; padding: 22px;
+            background: rgba(3, 7, 18, .76);
+            -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            opacity: 0; transition: opacity .25s ease;
+        }
+        .modal.show { opacity: 1; }
+        .modal-content {
+            position: relative; width: min(100%, 480px); overflow: hidden;
+            padding: 34px 34px 30px; text-align: left;
+            border: 1px solid rgba(255,255,255,.18); border-radius: 26px;
+            background: linear-gradient(145deg, #202d49 0%, #131d33 58%, #101827 100%);
+            box-shadow: 0 30px 90px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+            transform: translateY(24px) scale(.96);
+            transition: transform .3s cubic-bezier(.2,.8,.2,1);
+        }
+        .modal.show .modal-content { transform: translateY(0) scale(1); }
+        .modal-content::before {
+            content: ""; position: absolute; width: 240px; height: 240px; top: -145px; right: -90px;
+            border-radius: 50%; background: rgba(92,139,255,.2); filter: blur(10px); pointer-events: none;
+        }
+        .modal-topline { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .eyebrow { color: #8faeff; font-size: .72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .close {
+            display: grid; place-items: center; width: 38px; height: 38px; padding: 0;
+            color: #eaf0ff; background: rgba(255,255,255,.09);
+            border: 1px solid rgba(255,255,255,.14); border-radius: 50%;
+            font-size: 25px; line-height: 1; cursor: pointer;
+            transition: transform .2s, background .2s, border-color .2s;
+        }
+        .close:hover { transform: rotate(90deg); background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); }
+        .modal-content h2 {
+            position: relative; margin: 0 0 22px; color: #fff;
+            font: 800 clamp(1.65rem, 5vw, 2.1rem)/1.15 'Manrope', sans-serif;
+            letter-spacing: -.7px;
+        }
+        .flag-frame {
+            position: relative; padding: 10px; margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,.14); border-radius: 18px;
+            background: rgba(255,255,255,.055);
+        }
+        .modal-content img {
+            display: block; width: 100%; height: 220px; object-fit: contain;
+            border-radius: 11px; filter: drop-shadow(0 12px 18px rgba(0,0,0,.25));
+        }
+        .country-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .detail {
+            min-width: 0; padding: 14px 15px; border-radius: 14px;
+            background: rgba(255,255,255,.065); border: 1px solid rgba(255,255,255,.08);
+        }
+        .detail.region { grid-column: 1/-1; }
+        .detail-label { display: block; margin-bottom: 6px; color: #91a0bd; font-size: .72rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+        .detail-value { color: #f4f7ff; font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+        @media (max-width: 600px) {
+            body { padding: 30px 15px 45px; }
+            .flag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .flag-item { padding: 13px 9px; }
+            .flag-item img { height: 66px; }
+            .modal-content { padding: 25px 20px 22px; border-radius: 22px; }
+            .modal-content img { height: 170px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Country Flags Encyclopedia</h1>
+    <p class="subtitle">Explore countries, flags, capitals and more.</p>
+    <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input type="text" id="searchFlags" class="search-bar" placeholder="Search for a country..." oninput="filterFlags()" autocomplete="off" aria-label="Search countries">
+    </div>
+    <div class="flag-grid" id="flagGrid"></div>
+
+    <div class="modal" id="flagModal" role="dialog" aria-modal="true" aria-labelledby="countryName" onclick="handleModalBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-topline">
+                <span class="eyebrow">Country profile</span>
+                <button class="close" type="button" aria-label="Close popup" onclick="closeModal('flagModal')">&times;</button>
+            </div>
+            <h2 id="countryName"></h2>
+            <div class="flag-frame"><img id="countryFlag" src="" alt="Country flag"></div>
+            <div class="country-details">
+                <div class="detail"><span class="detail-label">Capital</span><span class="detail-value" id="countryCapital"></span></div>
+                <div class="detail"><span class="detail-label">Population</span><span class="detail-value" id="countryPopulation"></span></div>
+                <div class="detail region"><span class="detail-label">Region</span><span class="detail-value" id="countryRegion"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const countries = [
+            { name: "United States", capital: "Washington D.C.", population: "331M", region: "North America", image:"./assets/us.png" },
+            { name: "India", capital: "New Delhi", population: "1.4B", region: "Asia", image:"./assets/india.png" },
+            { name: "Germany", capital: "Berlin", population: "83M", region: "Europe", image:"./assets/germany.png" },
+            { name: "Japan", capital: "Tokyo", population: "126M", region: "Asia", image:"./assets/japan.png" },
+            { name: "Australia", capital: "Canberra", population: "25M", region: "Oceania", image:"./assets/australia.png" },
+            { name: "France", capital: "Paris", population: "67M", region: "Europe", image:"./assets/france.png" },
+            { name: "Canada", capital: "Ottawa", population: "38M", region: "North America", image:"./assets/canada.png" },
+            { name: "Brazil", capital: "Brasilia", population: "213M", region: "South America", image:"./assets/brazil.png" },
+            { name: "Russia", capital: "Moscow", population: "144M", region: "Europe/Asia", image:"./assets/russia.png" },
+            { name: "China", capital: "Beijing", population: "1.4B", region: "Asia", image:"./assets/china.png" },
+            { name: "United Kingdom", capital: "London", population: "67M", region: "Europe", image:"./assets/uk.png" },
+            { name: "Italy", capital: "Rome", population: "60M", region: "Europe", image:"./assets/italy.png" },
+            { name: "Spain", capital: "Madrid", population: "47M", region: "Europe", image:"./assets/spain.png" },
+            { name: "Mexico", capital: "Mexico City", population: "126M", region: "North America", image:"./assets/mexico.png" },
+            { name: "South Africa", capital: "Pretoria", population: "59M", region: "Africa", image:"./assets/southafrica.png" },
+            { name: "Argentina", capital: "Buenos Aires", population: "45M", region: "South America", image:"./assets/argentina.png" },
+            { name: "South Korea", capital: "Seoul", population: "52M", region: "Asia", image:"./assets/southkorea.png" },
+            { name: "Egypt", capital: "Cairo", population: "104M", region: "Africa", image:"./assets/egypt.png" },
+            { name: "Turkey", capital: "Ankara", population: "85M", region: "Europe/Asia", image:"./assets/turkey.png" },
+            { name: "Indonesia", capital: "Jakarta", population: "273M", region: "Asia", image:"./assets/indonesia.png" },
+            { name: "Saudi Arabia", capital: "Riyadh", population: "35M", region: "Asia", image:"./assets/saudiarabia.png" },
+            { name: "Thailand", capital: "Bangkok", population: "70M", region: "Asia", image:"./assets/thailand.png" },
+            { name: "Vietnam", capital: "Hanoi", population: "97M", region: "Asia", image:"./assets/vietnam.png" },
+            { name: "Netherlands", capital: "Amsterdam", population: "17M", region: "Europe", image:"./assets/netherlands.png" },
+            { name: "Sweden", capital: "Stockholm", population: "10M", region: "Europe", image:"./assets/sweden.png" },
+            { name: "Switzerland", capital: "Bern", population: "8.5M", region: "Europe", image:"./assets/switzerland.jpg" },
+            { name: "Norway", capital: "Oslo", population: "5.4M", region: "Europe", image:"./assets/norway.png" },
+            { name: "Pakistan", capital: "Islamabad", population: "225M", region: "Asia", image:"./assets/pakistan.png" },
+            { name: "Bangladesh", capital: "Dhaka", population: "166M", region: "Asia", image:"./assets/bangladesh.png" },
+            { name: "Philippines", capital: "Manila", population: "113M", region: "Asia", image:"./assets/philippines.png" }
+        ];
+
+        const flagGrid = document.getElementById("flagGrid");
+        const modal = document.getElementById("flagModal");
+
+        function displayFlags(countryList) {
+            flagGrid.innerHTML = "";
+            if (!countryList.length) {
+                flagGrid.innerHTML = '<p class="empty-state">No countries found. Try another search.</p>';
+                return;
+            }
+            countryList.forEach(country => {
+                const card = document.createElement("button");
+                card.type = "button";
+                card.className = "flag-item";
+                card.setAttribute("aria-label", `View ${country.name} details`);
+                const image = document.createElement("img");
+                image.src = country.image;
+                image.alt = `${country.name} flag`;
+                image.loading = "lazy";
+                image.onerror = () => { image.alt = `${country.name} flag image unavailable`; };
+                const name = document.createElement("p");
+                name.textContent = country.name;
+                card.append(image, name);
+                card.addEventListener("click", () => openFlagModal(country.name));
+                flagGrid.appendChild(card);
+            });
+        }
+
+        function loadFlags() { displayFlags(countries); }
+
+        function filterFlags() {
+            const searchTerm = document.getElementById("searchFlags").value.trim().toLowerCase();
+            displayFlags(countries.filter(country => country.name.toLowerCase().includes(searchTerm)));
+        }
+
+        function openFlagModal(countryName) {
+            const country = countries.find(c => c.name === countryName);
+            if (!country) return;
+
+            document.getElementById("countryName").textContent = country.name;
+            document.getElementById("countryFlag").src = country.image;
+            document.getElementById("countryFlag").alt = `${country.name} flag`;
+            document.getElementById("countryCapital").textContent = country.capital;
+            document.getElementById("countryPopulation").textContent = country.population;
+            document.getElementById("countryRegion").textContent = country.region;
+
+            modal.style.display = "flex";
+            document.body.style.overflow = "hidden";
+            requestAnimationFrame(() => modal.classList.add("show"));
+            modal.querySelector(".close").focus();
+        }
+
+        function closeModal(id) {
+            const target = document.getElementById(id);
+            target.classList.remove("show");
+            document.body.style.overflow = "";
+            window.setTimeout(() => {
+                if (!target.classList.contains("show")) target.style.display = "none";
+            }, 260);
+        }
+
+        function handleModalBackdrop(event) {
+            if (event.target === modal) closeModal("flagModal");
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && modal.style.display === "flex") closeModal("flagModal");
+        });
+
+        window.onload = loadFlags;
+    </script>
+</body>
+</html>
